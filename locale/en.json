@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Edit & Regenerate",
+    "description": "Adds an Edit action to user message bubbles: rewrite the message and regenerate from there, carrying images and files over and inheriting the model"
+  }
+}

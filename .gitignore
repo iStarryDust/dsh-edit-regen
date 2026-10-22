@@ -1,0 +1,19 @@
+# 产物：本目录就是可安装包，lib/ 是运行时入口，但不入库（构建生成）
+lib/
+
+# 构建中间产物
+.build/
+
+# 依赖
+node_modules/
+tooling/node_modules/
+
+# 打出来的包
+*.tgz
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
+
+*.log

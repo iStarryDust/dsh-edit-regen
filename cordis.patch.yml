@@ -1,0 +1,7 @@
+# 编辑重发插件：一行。
+# 宿主半端注册 `editRegen` 会话动作（授权读文件、求分叉边界、清壳）；浏览器半端把
+# 「编辑」装到用户消息气泡上，并自己把 `remote.editRegen` 命名空间挂到共享 remote 服务。
+# 本插件不依赖 Agent 管理套件：命名空间由自己的浏览器半端挂载。
+- insert:
+    - id: edit-regen
+      name: '@istarry/dsh-edit-regen'

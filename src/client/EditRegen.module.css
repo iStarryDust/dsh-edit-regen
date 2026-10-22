@@ -1,0 +1,387 @@
+/* The shadowed durable user message: official bubble chrome (ported from
+   ui-chat's MessageItem / MessageIconActions modules) plus the inline
+   editor's managed attachment strip. */
+
+.userRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.userStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+  /* The figma 525px cap held as a share of the width axis (525/748 ≈ 0.702):
+     resolves to the original 525px on the default column and widens with a
+     dragged or adaptive column. The 748px fallback covers mounts outside the
+     conversation column, where the axis variable is absent. */
+  max-width: min(calc(var(--dsh-chat-content-width, 748px) * 0.702), 82%);
+}
+
+.bubble {
+  max-width: 100%;
+  background: var(--dsw-specific-bubble);
+  border-radius: var(--dsw-radius-xl);
+  /* 42px single-line bubble at the default size: 22 line + 10 vertical
+     padding each side; the Settings font-size preference moves size and line
+     height together through the body-published axis. */
+  padding: 10px 16px;
+  font-size: var(--dsh-content-font-size, 14px);
+  line-height: calc(22px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-primary);
+  /* The projected user text is inline runs; the bubble owns wrapping so a
+     decorated single-line message stays one line. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.referenceSummary {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(18px + var(--dsh-content-font-delta-secondary, 0px));
+}
+
+.attachmentRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+  gap: 8px;
+}
+
+.fileCard {
+  display: inline-flex;
+  flex: 0 0 240px;
+  align-items: center;
+  gap: 10px;
+  width: 240px;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  border-radius: var(--dsw-radius-xl);
+  background: var(--dsw-specific-input-major, transparent);
+  box-sizing: border-box;
+}
+
+.fileIcon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.fileContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fileName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+}
+
+.fileMeta {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-tertiary, rgba(0, 0, 0, 0.45));
+  font-size: 12px;
+  line-height: 15px;
+}
+
+/* Copy / clock / edit actions row (the official IconActions chrome). */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: calc(28px + var(--dsh-content-font-delta, 0px));
+}
+
+.timeStart {
+  padding-right: 12px;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-tertiary);
+  white-space: nowrap;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(28px + var(--dsh-content-font-delta, 0px));
+  height: calc(28px + var(--dsh-content-font-delta, 0px));
+  padding: 6px;
+  border: none;
+  border-radius: var(--dsw-radius-sm);
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+.action svg {
+  width: calc(15px + var(--dsh-content-font-delta, 0px));
+  height: calc(15px + var(--dsh-content-font-delta, 0px));
+}
+
+.action:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* Unavailable stays focusable and hoverable so Tooltip can explain why. */
+.action[data-unavailable] {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.action[data-unavailable]:hover {
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* The inline editor: same right-aligned column, auto-sized textarea, and the
+   managed attachment strip (images as removable chips, files as cards). */
+.editStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  width: min(525px, 82%);
+}
+
+.editArea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border: 1px solid var(--dsw-alias-border-subtle);
+  border-radius: 22px;
+  background: var(--dsw-specific-bubble);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: var(--dsh-content-font-size, 14px);
+  line-height: calc(22px + var(--dsh-content-font-delta, 0px));
+  resize: vertical;
+}
+
+.editArea:focus-visible {
+  outline: none;
+  border-color: var(--dsw-alias-button-info-fill);
+}
+
+.editArea:disabled {
+  opacity: 0.6;
+}
+
+.editHint {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.editFailure {
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.editImageStrip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.editImageChip {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.editImageThumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editImageRemove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 72%, transparent);
+  color: var(--dsw-specific-bubble);
+  cursor: pointer;
+}
+
+.editImageRemove:not(:disabled):hover {
+  background: var(--dsw-alias-label-primary);
+}
+
+.editImageRemove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.editFileStack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.editFileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-specific-input-major, transparent);
+  box-sizing: border-box;
+}
+
+.editFileIcon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.editFileName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.editFileMeta {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary, rgba(0, 0, 0, 0.45));
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.editRemoveInline {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+.editRemoveInline:not(:disabled):hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.editRemoveInline:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editActions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.editActions button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* The add-attachment affordance: a file-input label dressed as a tool chip. */
+.editAdd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  border: none;
+  border-radius: 16px;
+  background: none;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.editAdd:hover {
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.editAddIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.editInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.editCancel {
+  background: none;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.editCancel:not(:disabled):hover {
+  color: var(--dsw-alias-label-primary);
+}
+
+.editConfirm {
+  background: var(--dsw-alias-button-info-fill);
+  color: var(--dsw-alias-button-info-label);
+}
+
+.editConfirm:not(:disabled):hover {
+  filter: brightness(1.08);
+}
