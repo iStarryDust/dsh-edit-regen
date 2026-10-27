@@ -71,6 +71,19 @@ function contentParts(content: readonly unknown[]): {
 /** The date-template share of the chat dictionary the clock consumes. */
 type ChatTranslate = Translate<'clock.md' | 'clock.ymd' | 'json.truncated' | 'message.extraBlock' | 'message.referenceSummary' | 'message.referenceSeparator'>
 
+/**
+ * Display name of a durable image reference. The owner used to hand renderers a
+ * `renderMessageImages` closure; a shell that stopped passing it leaves only the
+ * reference, which still carries the upload's name — enough for a label.
+ * @param image - The attachment reference as contentParts built it.
+ * @returns The file name, or `image` when the reference carries none.
+ */
+function imageNameOf(image: unknown): string {
+  const ref = (image as { attachment?: { name?: unknown } } | null)?.attachment
+  const name = ref?.name
+  return typeof name === 'string' && name !== '' ? name : 'image'
+}
+
 function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
@@ -215,11 +228,23 @@ function UserBubble({
             {attachments.map((attachment, index) => attachment.type === 'image'
               ? (
                 <Fragment key={`image:${index}`}>
-                  {renderMessageImages({
-                    images: [attachment.image],
-                    align: 'end',
-                    compact: compactImages,
-                  })}
+                  {typeof renderMessageImages === 'function'
+                    ? renderMessageImages({
+                      images: [attachment.image],
+                      align: 'end',
+                      compact: compactImages,
+                    })
+                    // The shell no longer passes the rendering closure (it moved
+                    // image presentation to its own slot). Render the reference
+                    // as a plain chip instead of throwing: an attachment row is
+                    // not worth losing the edit entry over.
+                    : (
+                      <span className={css.fileCard} title={imageNameOf(attachment.image)}>
+                        <span className={css.fileContent}>
+                          <span className={css.fileName}>{imageNameOf(attachment.image)}</span>
+                        </span>
+                      </span>
+                    )}
                 </Fragment>
               )
               : (
@@ -279,6 +304,9 @@ function KeptImageThumb({
   useEffect(() => {
     if (requested.current) return
     requested.current = true
+    // A shell whose owner props no longer carry the loader would otherwise
+    // throw here and take the whole editor (and the edit entry) down with it.
+    if (typeof loadImage !== 'function') return
     void loadImage(image).then(setUrl, () => { setUrl(undefined) })
   }, [image, loadImage])
   return url === undefined
