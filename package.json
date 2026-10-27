@@ -1,7 +1,7 @@
 {
   "name": "@istarry/dsh-edit-regen",
   "description": "编辑重发：在用户消息气泡上多一个「编辑」，改完从那条消息重新生成；图片与文件随行重传，模型继承原会话",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "icon": "./icon.svg",
   "type": "module",
   "main": "lib/index.js",

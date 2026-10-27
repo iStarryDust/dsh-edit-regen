@@ -204,10 +204,14 @@ function MessageActions({
 
 /** Right-aligned durable user bubble with the official presentation. */
 function UserBubble({
-  node, renderMessageImages, openFile, openSkill, onEdit, editUnavailable, editTitle, chatT, t,
+  node, renderMessageImages, renderSlot, loadImage, openFile, openSkill, onEdit, editUnavailable, editTitle, chatT, t,
 }: {
   node: ReferencedUserMessage
   renderMessageImages: ChatNodeOwnerProps['renderMessageImages']
+  /** Slot renderer of the new contract: the shell hands image presentation to
+   *  `conversation.message.images` instead of a ready-made closure. */
+  renderSlot: ((name: string, props: Record<string, unknown>) => ReactNode) | undefined
+  loadImage: ChatNodeOwnerProps['loadImage']
   openFile: ChatNodeOwnerProps['openFile']
   openSkill: ChatNodeOwnerProps['openSkill']
   onEdit: () => void
@@ -220,6 +224,35 @@ function UserBubble({
   const truncated = (total: number): string => chatT('json.truncated', { total })
   const compactImages = attachments.filter(a => a.type === 'image').length > 1
   const showBubble = text !== '' || rest.length > 0
+  /**
+   * The official gallery, three ways down: the old closure, the new slot (the
+   * shell's own attachment plugin renders it), and a plain chip. A missing
+   * renderer must degrade, never throw — a crashed node takes the whole bubble
+   * (and the edit entry with it) off the transcript.
+   */
+  const renderImageGroup = (image: MessageImageSource): ReactNode => {
+    if (typeof renderMessageImages === 'function') {
+      return renderMessageImages({ images: [image], align: 'end', compact: compactImages })
+    }
+    if (typeof renderSlot === 'function' && typeof loadImage === 'function') {
+      return renderSlot('conversation.message.images', {
+        images: [image],
+        loadImage,
+        align: 'end',
+        compact: compactImages,
+      })
+    }
+    if (typeof loadImage === 'function') {
+      return <UserImage image={image} loadImage={loadImage} compact={compactImages} label={t('view.image')} />
+    }
+    return (
+      <span className={css.fileCard} title={imageNameOf(image)}>
+        <span className={css.fileContent}>
+          <span className={css.fileName}>{imageNameOf(image)}</span>
+        </span>
+      </span>
+    )
+  }
   return (
     <div className={css.userRow} data-time-hover-root>
       <div className={css.userStack}>
@@ -228,23 +261,7 @@ function UserBubble({
             {attachments.map((attachment, index) => attachment.type === 'image'
               ? (
                 <Fragment key={`image:${index}`}>
-                  {typeof renderMessageImages === 'function'
-                    ? renderMessageImages({
-                      images: [attachment.image],
-                      align: 'end',
-                      compact: compactImages,
-                    })
-                    // The shell no longer passes the rendering closure (it moved
-                    // image presentation to its own slot). Render the reference
-                    // as a plain chip instead of throwing: an attachment row is
-                    // not worth losing the edit entry over.
-                    : (
-                      <span className={css.fileCard} title={imageNameOf(attachment.image)}>
-                        <span className={css.fileContent}>
-                          <span className={css.fileName}>{imageNameOf(attachment.image)}</span>
-                        </span>
-                      </span>
-                    )}
+                  {renderImageGroup(attachment.image)}
                 </Fragment>
               )
               : (
@@ -290,6 +307,65 @@ interface EditorDraft {
   readonly kind: 'image' | 'file'
   readonly file: File
   readonly previewUrl: string | undefined
+}
+
+/**
+ * One durable image of a SENT message. The shell stopped handing chat-node
+ * renderers a gallery closure, and it does not pass the
+ * `conversation.message.images` slot renderer down either — but it does still
+ * pass the authorized loader, so the bubble draws its own thumbnail and its own
+ * lightbox: click to enlarge, Esc or click again to close. That is the behaviour
+ * the official gallery had; only the chrome is ours.
+ */
+function UserImage({
+  image, loadImage, compact, label,
+}: {
+  image: MessageImageSource
+  loadImage: ChatNodeOwnerProps['loadImage']
+  compact: boolean
+  label: string
+}): ReactNode {
+  const [url, setUrl] = useState<string | undefined>(undefined)
+  const [zoomed, setZoomed] = useState(false)
+  useEffect(() => {
+    if (typeof loadImage !== 'function') return
+    let alive = true
+    void loadImage(image.attachment).then(
+      (next) => { if (alive) setUrl(next) },
+      () => { if (alive) setUrl(undefined) },
+    )
+    return () => { alive = false }
+  }, [image, loadImage])
+  useEffect(() => {
+    if (!zoomed) return
+    const onKey = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === 'Escape') setZoomed(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('keydown', onKey) }
+  }, [zoomed])
+  if (url === undefined) return <div className={css.imagePlaceholder} aria-hidden />
+  return (
+    <>
+      <button
+        type="button"
+        className={css.imageThumbButton}
+        aria-label={label}
+        onClick={() => { setZoomed(true) }}
+      >
+        <img
+          className={compact ? `${css.imageThumb} ${css.imageThumbCompact}` : css.imageThumb}
+          src={url}
+          alt=""
+        />
+      </button>
+      {zoomed && (
+        <div className={css.imageLightbox} role="dialog" aria-modal="true" onClick={() => { setZoomed(false) }}>
+          <img className={css.imageLightboxImage} src={url} alt="" />
+        </div>
+      )}
+    </>
+  )
 }
 
 /** The kept image's authorized thumb: resolved once through the owner loader. */
@@ -567,9 +643,14 @@ export type UserMessageNodeViewProps =
  * @param props - composed slot props.
  * @returns the message row.
  */
-export const UserMessageNodeView = memo(function UserMessageNodeView({
-  node, renderMessageImages, openFile, openSkill, loadImage, useSession, sessionId, rewriteFrom, chatT, t,
-}: UserMessageNodeViewProps): ReactNode {
+export const UserMessageNodeView = memo(function UserMessageNodeView(props: UserMessageNodeViewProps): ReactNode {
+  const { node, renderMessageImages, openFile, openSkill, loadImage, useSession, sessionId, rewriteFrom, chatT, t } = props
+  // The slot renderer is read off the props instead of the type: only a shell
+  // that moved image presentation to `conversation.message.images` passes it,
+  // and the older contract does not type it at all.
+  const renderSlot = (props as unknown as {
+    renderSlot?: (name: string, slotProps: Record<string, unknown>) => ReactNode
+  }).renderSlot
   const session = useSession(snapshot => snapshot)
   const editingUnavailable = session.running || session.subagent !== null
   const [editing, setEditing] = useState(false)
@@ -591,6 +672,8 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
       <UserBubble
         node={node.data}
         renderMessageImages={renderMessageImages}
+        renderSlot={renderSlot}
+        loadImage={loadImage}
         openFile={openFile}
         openSkill={openSkill}
         onEdit={() => { setEditing(true) }}

@@ -13,6 +13,7 @@ export const zh = {
   'edit.image.remove': '移除这张图片',
   'edit.file.add': '添加文件',
   'edit.file.remove': '移除这个文件',
+  'view.image': '查看图片',
   'copy': '复制',
   'copied': '已复制',
 } satisfies Record<string, string>
@@ -33,6 +34,7 @@ export const en = {
   'edit.image.remove': 'Remove this image',
   'edit.file.add': 'Add files',
   'edit.file.remove': 'Remove this file',
+  'view.image': 'View image',
   'copy': 'Copy',
   'copied': 'Copied',
 } satisfies Record<EditRegenKey, string>

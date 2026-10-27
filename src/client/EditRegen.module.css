@@ -385,3 +385,53 @@
 .editConfirm:not(:disabled):hover {
   filter: brightness(1.08);
 }
+
+/* The shell stopped handing chat-node renderers an image gallery (and does not
+   pass the `conversation.message.images` slot renderer either), so the bubble
+   draws the thumbnail itself from the authorized loader. Sizes mirror the
+   official message-attachment tiles; clicking opens our own lightbox. */
+.imageThumbButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 0;
+  cursor: zoom-in;
+}
+
+.imageThumb {
+  display: block;
+  max-width: 240px;
+  max-height: 240px;
+  border-radius: var(--dsw-radius-lg, 12px);
+  border: 0.5px solid var(--dsw-alias-border-l2, rgba(0, 0, 0, 0.12));
+}
+
+.imageThumbCompact {
+  max-width: 120px;
+  max-height: 120px;
+}
+
+.imagePlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--dsw-radius-lg, 12px);
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
+}
+
+.imageLightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: zoom-out;
+}
+
+.imageLightboxImage {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
