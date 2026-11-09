@@ -1,7 +1,7 @@
 {
   "name": "@istarry/dsh-edit-regen",
   "description": "编辑重发：在用户消息气泡上多一个「编辑」，改完从那条消息重新生成；图片与文件随行重传，模型继承原会话",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "icon": "./icon.svg",
   "type": "module",
   "main": "lib/index.js",
@@ -63,12 +63,12 @@
     "tooling": "cd tooling && pnpm install"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": ">=0.2.1-rc.2",
-    "@deepseek-ai/dsh-attachment": ">=0.2.1-rc.2",
-    "@deepseek-ai/dsh-session": ">=0.2.1-rc.2",
-    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.2"
+    "@deepseek-ai/cordis": ">=0.2.1-rc.2 <0.3.0-0",
+    "@deepseek-ai/dsh-attachment": ">=0.2.1-rc.2 <0.3.0-0",
+    "@deepseek-ai/dsh-session": ">=0.2.1-rc.2 <0.3.0-0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.2 <0.3.0-0"
   },
   "engines": {
-    "dsh": ">=0.2.1-rc.2"
+    "dsh": ">=0.2.1-rc.2 <0.3.0-0"
   }
 }
