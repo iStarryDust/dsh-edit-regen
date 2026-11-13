@@ -1,5 +1,18 @@
 # dsh-edit-regen
 
+> [!WARNING]
+> **本插件已停止维护，请改用 [dsh-chat-edit](https://github.com/iStarryDust/dsh-chat-edit)。**
+>
+> 新插件保留了这个插件的全部「编辑重发」能力，并新增**改 AI 回复正文**——改完开一条新对话
+> 从改过的内容继续，原对话结构一点不动。两个能力共用一套实现，只维护一个包。
+>
+> ```bash
+> dsh plugin --profile <名字> remove @istarry/dsh-edit-regen
+> dsh plugin --profile <名字> add @istarry/dsh-chat-edit
+> ```
+>
+> 已安装的旧版本可以继续用，但后续修复与新功能只会进新插件。
+
 DeepSeek Harness 的**编辑重发**插件：用户消息气泡上多一个「编辑」，改完从那条消息重新生成；
 保留的图片与文件随行重传，新会话继承原会话的模型选择。
 
